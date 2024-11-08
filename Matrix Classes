@@ -1,0 +1,193 @@
+def flatten(input_array):
+    # Initialize an empty list to hold the flattened values
+    output_list = []
+    
+    # Get the number of rows and columns from the shape of the input array
+    number_rows, number_columns = input_array.shape 
+    
+    # Iterate through each row
+    for i in range(number_rows):
+        # Iterate through each column in the current row
+        for j in range(number_columns):
+            # Append the element at position (i, j) to the output list
+            output_list.append(input_array[i, j])
+    
+    # Convert the list to a numpy array and return it
+    return np.array(output_list)
+
+
+#array[0, 0] refers to the element in Row 0, Column 0, which is 1.
+#array[0, 1] refers to the element in Row 0, Column 1, which is 2.
+#array[1, 0] refers to the element in Row 1, Column 0, which is 3.
+#array[1, 1] refers to the element in Row 1, Column 1, which is 4.
+
+input_array = np.array([[1,2],[3,4]])
+print(input_array.shape)
+
+
+
+def flatten_jagged(input_array):
+    output_array = []
+    
+    number_rows = input_array.shape[0]  #cause.shape gets the number of rows and columns from the shape of the input array
+    
+    for i in range(number_rows):
+        for k in input_array[i]:
+            output_array.append(k)
+      
+   
+
+    return np.array(output_array)
+
+
+def flatten_v2(input_array, major = "row"):
+    output_array = []
+    
+    number_rows, number_columns = input_array.shape #correspond
+    
+    if major == "row":
+        output_array = flatten(input_array)
+    else:
+        for i in range(number_columns):
+            for k in range(number_rows):
+                output_array.append(input_array[i,k]) 
+
+    return np.array(output_array)
+
+
+def keyvalue_dense_to_sparse(array):
+    output_dictionary = {}
+    
+    for i in range(array.shape[0]):
+        for j in range(array.shape[1]):
+            if array[i,j] != 0: #if the number of this place is not equal to zero
+                output_dictionary[(i,j)] = array[i,j] #Then we can use its spot to create dic
+                              #key-value pair
+    
+            #Sparse Matrix:  most of the elements are zero # not memory efficient
+            #Dense: Opposite
+            
+            
+    return output_dictionary, array.shape
+
+
+def keyvalue_sparse_to_dense(data_dict, shape):
+    output_array = np.zeros(shape)
+
+    for key, value in data_dict.items(): #.items shows all key-value pairs
+        rows, columns = key
+        output_array[rows, columns] = value 
+   
+
+## Output should be:
+# [[1. 0.]
+#  [0. 4.]]
+
+#data_dict.items() returns all key-value pairs in the dictionary. 
+#For each key-value pair, the key is a tuple containing (row, column), 
+#and the value is the corresponding numeric entry. 
+#The items() method returns an iterable object containing 
+#all (key, value) pairs in the dictionary, in the form of dict_items([((0, 0), 1), ((1, 1), 4)]).
+    
+    return output_array
+
+
+
+
+def csr_dense_to_sparse(array):
+    data, index = [], []
+    index_pointer = [0]
+    
+    for i in range(array.shape[0]):
+        temp = []
+        for j in range(array.shape[1]):
+            if array[i, j] != 0:
+                data.append(array[i, j])
+                temp.append(j)
+        index.extend(temp)  
+        index_pointer.append(len(data)) #indicates the number of non-zero values\
+         # index_pointer.append(2) adds 2 to index_pointer, indicating the next row of non-zero elements starts from data[2]. Now index_pointer = [0, 2]
+
+    # Appending an empty list to another empty list can result in [0,[0,1]], so we use extend instead.
+        # extend() is used to add each element of a list to another list one by one.
+    
+    return data, index, index_pointer, shape
+
+
+
+
+def csr_sparse_to_dense(data, index, index_pointer, shape):
+    output_array = np.zeros(shape)  #create the zeros array first and then fill the non-zero numbers
+
+    for i in range(shape[0]):
+        nonzero_indices = index[index_pointer[i]:index_pointer[i+1]]
+        nonzero_values = data[index_pointer[i]:index_pointer[i+1]]
+       
+        for indexx in range(len(nonzero_indices)):
+            column = nonzero_indices[indexx] 
+            value = nonzero_values[indexx] 
+            output_array[i, column] = value 
+    
+    return output_array
+
+
+
+
+class GenericMatrix(object): #like grandfather
+    def __init__(self, number_rows, number_columns):
+        self.number_rows = number_rows
+        self.number_columns = number_columns
+
+
+class DenseMatrix(GenericMatrix):
+    def __init__(self, data):
+        number_rows, number_columns = data.shape
+        super().__init__(number_rows, number_columns)
+        self.data = data
+
+
+class GenericSparseMatrix(GenericMatrix):
+    def __init__(self, shape):
+        self.shape = shape
+        super().__init__(shape[0], shape[1])
+      
+
+    def sparse_to_dense(self):
+        pass 
+
+
+class CSRMatrix(GenericSparseMatrix):    
+    def __init__(self, data, index, index_pointer, shape):
+        super().__init__(shape)
+        self.data = data
+        self.index = index
+        self.index_pointer = index_pointer
+        
+    def sparse_to_dense(self):
+        output_array = np.zeros(shape)
+
+        for i in range(shape[0]):
+            nonzero_indices = index[index_pointer[i]:index_pointer[i+1]]
+            nonzero_values = data[index_pointer[i]:index_pointer[i+1]]
+       
+            for indexx in range(len(nonzero_indices)):
+                column = nonzero_indices[indexx] 
+                value = nonzero_values[indexx] 
+                output_array[i, column] = value 
+    
+        return output_array
+
+
+class KeyValueMatrix(GenericSparseMatrix):    
+    def __init__(self, data_dict, shape):
+        super().__init__(shape)
+        self.data_dict = data_dict
+        
+    def sparse_to_dense(self):
+        output_array = np.zeros(shape)
+
+        for key, value in data_dict.items(): 
+            rows, columns = key
+            output_array[rows, columns] = value 
+    
+        return output_array
