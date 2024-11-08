@@ -1,0 +1,1 @@
+While working as a Data Engineer at Taiwan Mobile, the largest telecommunications company in Taiwan, I served as an instructor for our Center of Excellence (CoE). In this role, I organized and shared methods for structuring and storing our company’s databases, teaching these techniques to other project managers and colleagues from non-technical backgrounds.
